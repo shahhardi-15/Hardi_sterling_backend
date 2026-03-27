@@ -38,8 +38,22 @@ func main() {
 	adminHandler := handlers.NewAdminHandler(adminRepo, cfg)
 	appointmentHandler := handlers.NewAppointmentHandler(cfg)
 
-	// Setup Gin router
-	router := gin.Default()
+	// Set Gin mode based on environment
+	if cfg.Env == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		gin.SetMode(gin.DebugMode)
+	}
+
+	// Setup Gin router (avoid duplicate middleware warning by using gin.New())
+	router := gin.New()
+
+	// Add Logger and Recovery middleware explicitly
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
+
+	// Set trusted proxies
+	router.SetTrustedProxies([]string{"127.0.0.1", "localhost", "::1"})
 
 	// CORS middleware
 	router.Use(cors.New(cors.Config{
@@ -92,6 +106,13 @@ func main() {
 	{
 		doctorGroup.GET("", appointmentHandler.GetDoctors)
 		doctorGroup.GET("/available-slots", appointmentHandler.GetAvailableSlots)
+		doctorGroup.GET("/by-specialization", appointmentHandler.GetDoctorsBySpecialization)
+	}
+
+	// Specialization routes (public)
+	specializationGroup := router.Group("/api/specializations")
+	{
+		specializationGroup.GET("", appointmentHandler.GetSpecializations)
 	}
 
 	// Admin routes

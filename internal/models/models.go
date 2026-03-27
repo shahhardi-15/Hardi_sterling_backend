@@ -95,16 +95,25 @@ type PasswordResetLink struct {
 	ExpiresAt time.Time
 }
 
+// Specialization Model
+type Specialization struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 // Doctor Model
 type Doctor struct {
-	ID             int       `json:"id"`
-	Name           string    `json:"name"`
-	Specialization string    `json:"specialization"`
-	Email          string    `json:"email"`
-	Phone          string    `json:"phone"`
-	IsAvailable    bool      `json:"isAvailable"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	ID              int       `json:"id"`
+	Name            string    `json:"name"`
+	Specialization  string    `json:"specialization"`
+	Email           string    `json:"email"`
+	Phone           string    `json:"phone"`
+	ExperienceYears int       `json:"experienceYears"`
+	Qualification   string    `json:"qualification"`
+	Address         string    `json:"address"`
+	IsAvailable     bool      `json:"isAvailable"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
 // Appointment Model
@@ -150,6 +159,7 @@ type BookAppointmentRequest struct {
 	AppointmentDate string `json:"appointmentDate" binding:"required"` // YYYY-MM-DD
 	TimeSlot        string `json:"timeSlot" binding:"required"`
 	Reason          string `json:"reason" binding:"required"`
+	Notes           string `json:"notes"`
 }
 
 type UpdateAppointmentRequest struct {
@@ -172,6 +182,11 @@ type AppointmentsListResponse struct {
 type AvailableSlotsResponse struct {
 	Message string            `json:"message"`
 	Slots   []AppointmentSlot `json:"slots"`
+}
+
+type SpecializationsResponse struct {
+	Message         string           `json:"message"`
+	Specializations []Specialization `json:"specializations"`
 }
 
 type DoctorsResponse struct {

@@ -16,7 +16,7 @@ func NewAppointmentRepository(db *sql.DB) *AppointmentRepository {
 // GetPatientProfile retrieves patient profile information
 func (r *AppointmentRepository) GetPatientProfile(userID int) (*models.PatientProfile, error) {
 	query := `
-		SELECT id, first_name, last_name, email, is_active
+		SELECT id, first_name, last_name, email
 		FROM users
 		WHERE id = $1
 	`
@@ -51,7 +51,7 @@ func (r *AppointmentRepository) GetAppointmentHistory(patientID int, limit int, 
 		SELECT 
 			a.id, a.patient_id, a.doctor_id, a.appointment_date, a.time_slot,
 			a.reason, a.status, a.notes, a.created_at, a.updated_at,
-			d.id, d.name, d.specialization, d.email, d.phone, d.is_available, d.created_at, d.updated_at
+			d.id, d.name, d.specialization, d.email, d.phone, d.experience_years, d.qualification, d.address, d.is_available, d.created_at, d.updated_at
 		FROM appointments a
 		JOIN doctors d ON a.doctor_id = d.id
 		WHERE a.patient_id = $1
@@ -73,7 +73,7 @@ func (r *AppointmentRepository) GetAppointmentHistory(patientID int, limit int, 
 		err := rows.Scan(
 			&apt.ID, &apt.PatientID, &apt.DoctorID, &apt.AppointmentDate, &apt.TimeSlot,
 			&apt.Reason, &apt.Status, &apt.Notes, &apt.CreatedAt, &apt.UpdatedAt,
-			&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
+			&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone, &doc.ExperienceYears, &doc.Qualification, &doc.Address, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
 		)
 
 		if err != nil {
@@ -123,7 +123,7 @@ func (r *AppointmentRepository) GetAvailableSlots(doctorID int, startDate string
 // GetDoctors retrieves all available doctors
 func (r *AppointmentRepository) GetDoctors() ([]models.Doctor, error) {
 	query := `
-		SELECT id, name, specialization, email, phone, is_available, created_at, updated_at
+		SELECT id, name, specialization, email, phone, experience_years, qualification, address, is_available, created_at, updated_at
 		FROM doctors
 		WHERE is_available = true
 		ORDER BY specialization, name
@@ -139,7 +139,8 @@ func (r *AppointmentRepository) GetDoctors() ([]models.Doctor, error) {
 	for rows.Next() {
 		var doc models.Doctor
 		err := rows.Scan(
-			&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
+			&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone,
+			&doc.ExperienceYears, &doc.Qualification, &doc.Address, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -151,15 +152,15 @@ func (r *AppointmentRepository) GetDoctors() ([]models.Doctor, error) {
 }
 
 // CreateAppointment creates a new appointment
-func (r *AppointmentRepository) CreateAppointment(patientID int, doctorID int, appointmentDate string, timeSlot string, reason string) (*models.Appointment, error) {
+func (r *AppointmentRepository) CreateAppointment(patientID int, doctorID int, appointmentDate string, timeSlot string, reason string, notes string) (*models.Appointment, error) {
 	query := `
-		INSERT INTO appointments (patient_id, doctor_id, appointment_date, time_slot, reason, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, 'scheduled', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		INSERT INTO appointments (patient_id, doctor_id, appointment_date, time_slot, reason, notes, status, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 		RETURNING id, patient_id, doctor_id, appointment_date, time_slot, reason, status, notes, created_at, updated_at
 	`
 
 	var apt models.Appointment
-	err := r.db.QueryRow(query, patientID, doctorID, appointmentDate, timeSlot, reason).Scan(
+	err := r.db.QueryRow(query, patientID, doctorID, appointmentDate, timeSlot, reason, notes).Scan(
 		&apt.ID, &apt.PatientID, &apt.DoctorID, &apt.AppointmentDate, &apt.TimeSlot,
 		&apt.Reason, &apt.Status, &apt.Notes, &apt.CreatedAt, &apt.UpdatedAt,
 	)
@@ -211,7 +212,7 @@ func (r *AppointmentRepository) GetAppointmentByID(appointmentID int) (*models.A
 		SELECT 
 			a.id, a.patient_id, a.doctor_id, a.appointment_date, a.time_slot,
 			a.reason, a.status, a.notes, a.created_at, a.updated_at,
-			d.id, d.name, d.specialization, d.email, d.phone, d.is_available, d.created_at, d.updated_at
+			d.id, d.name, d.specialization, d.email, d.phone, d.experience_years, d.qualification, d.address, d.is_available, d.created_at, d.updated_at
 		FROM appointments a
 		JOIN doctors d ON a.doctor_id = d.id
 		WHERE a.id = $1
@@ -223,7 +224,7 @@ func (r *AppointmentRepository) GetAppointmentByID(appointmentID int) (*models.A
 	err := r.db.QueryRow(query, appointmentID).Scan(
 		&apt.ID, &apt.PatientID, &apt.DoctorID, &apt.AppointmentDate, &apt.TimeSlot,
 		&apt.Reason, &apt.Status, &apt.Notes, &apt.CreatedAt, &apt.UpdatedAt,
-		&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
+		&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone, &doc.ExperienceYears, &doc.Qualification, &doc.Address, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
 	)
 
 	if err != nil {
@@ -279,17 +280,18 @@ func (r *AppointmentRepository) MarkSlotAvailable(doctorID int, slotDate string,
 	return err
 }
 
-// GetDoctorByID retrieves a single doctor
+// GetDoctorByID retrieves a single doctor with full details
 func (r *AppointmentRepository) GetDoctorByID(doctorID int) (*models.Doctor, error) {
 	query := `
-		SELECT id, name, specialization, email, phone, is_available, created_at, updated_at
+		SELECT id, name, specialization, email, phone, experience_years, qualification, address, is_available, created_at, updated_at
 		FROM doctors
 		WHERE id = $1
 	`
 
 	var doc models.Doctor
 	err := r.db.QueryRow(query, doctorID).Scan(
-		&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
+		&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone,
+		&doc.ExperienceYears, &doc.Qualification, &doc.Address, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
 	)
 
 	if err != nil {
@@ -297,4 +299,66 @@ func (r *AppointmentRepository) GetDoctorByID(doctorID int) (*models.Doctor, err
 	}
 
 	return &doc, nil
+}
+
+// GetSpecializations retrieves all unique specializations
+func (r *AppointmentRepository) GetSpecializations() ([]models.Specialization, error) {
+	query := `
+		SELECT DISTINCT specialization
+		FROM doctors
+		WHERE is_available = true
+		ORDER BY specialization ASC
+	`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var specializations []models.Specialization
+	id := 1
+	for rows.Next() {
+		var spec models.Specialization
+		err := rows.Scan(&spec.Name)
+		if err != nil {
+			return nil, err
+		}
+		spec.ID = id
+		id++
+		specializations = append(specializations, spec)
+	}
+
+	return specializations, rows.Err()
+}
+
+// GetDoctorsBySpecialization retrieves all doctors for a specific specialization
+func (r *AppointmentRepository) GetDoctorsBySpecialization(specialization string) ([]models.Doctor, error) {
+	query := `
+		SELECT id, name, specialization, email, phone, experience_years, qualification, address, is_available, created_at, updated_at
+		FROM doctors
+		WHERE specialization = $1 AND is_available = true
+		ORDER BY name ASC
+	`
+
+	rows, err := r.db.Query(query, specialization)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var doctors []models.Doctor
+	for rows.Next() {
+		var doc models.Doctor
+		err := rows.Scan(
+			&doc.ID, &doc.Name, &doc.Specialization, &doc.Email, &doc.Phone,
+			&doc.ExperienceYears, &doc.Qualification, &doc.Address, &doc.IsAvailable, &doc.CreatedAt, &doc.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		doctors = append(doctors, doc)
+	}
+
+	return doctors, rows.Err()
 }

@@ -138,6 +138,48 @@ func (h *AppointmentHandler) GetDoctors(c *gin.Context) {
 	})
 }
 
+// GetSpecializations retrieves all available specializations
+func (h *AppointmentHandler) GetSpecializations(c *gin.Context) {
+	specializations, err := h.appointmentRepo.GetSpecializations()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve specializations"})
+		return
+	}
+
+	if specializations == nil {
+		specializations = []models.Specialization{}
+	}
+
+	c.JSON(http.StatusOK, models.SpecializationsResponse{
+		Message:         "Specializations retrieved successfully",
+		Specializations: specializations,
+	})
+}
+
+// GetDoctorsBySpecialization retrieves doctors for a specific specialization
+func (h *AppointmentHandler) GetDoctorsBySpecialization(c *gin.Context) {
+	specialization := c.Query("specialization")
+	if specialization == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "specialization query parameter is required"})
+		return
+	}
+
+	doctors, err := h.appointmentRepo.GetDoctorsBySpecialization(specialization)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve doctors"})
+		return
+	}
+
+	if doctors == nil {
+		doctors = []models.Doctor{}
+	}
+
+	c.JSON(http.StatusOK, models.DoctorsResponse{
+		Message: "Doctors retrieved successfully",
+		Doctors: doctors,
+	})
+}
+
 // BookAppointment creates a new appointment
 func (h *AppointmentHandler) BookAppointment(c *gin.Context) {
 	userID, exists := c.Get("userID")
@@ -197,6 +239,7 @@ func (h *AppointmentHandler) BookAppointment(c *gin.Context) {
 		req.AppointmentDate,
 		req.TimeSlot,
 		req.Reason,
+		req.Notes,
 	)
 
 	if err != nil {
