@@ -1,0 +1,38 @@
+# Go
+*.go.sum
+go.sum
+*.mod
+
+# Binaries
+sterling-hms-backend
+sterling-hms-backend.exe
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+
+# Build output
+dist/
+build/
+bin/
+
+# Compiled Go files
+*.o
+*.a
+

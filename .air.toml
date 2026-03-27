@@ -1,0 +1,14 @@
+root = .
+testOnSave = false
+tmp_dir = tmp
+build:
+  cmd = go build -o ./tmp/sterling-hms-backend cmd/main.go
+  bin = tmp/sterling-hms-backend
+  full_bin_path = ./tmp/sterling-hms-backend
+  include_ext = go
+  exclude_dir = tests
+  include_dir = internal,cmd
+  delay = 1000
+  stop_on_error = true
+
+color = true
