@@ -103,7 +103,44 @@ func (h *AuthHandler) SignIn(c *gin.Context) {
 		return
 	}
 
-	// Find user by email
+	// Try doctor login first
+	doctorRepo := repositories.NewDoctorRepository(config.DB)
+	doctor, errDoctor := doctorRepo.FindByEmail(req.Email)
+	if errDoctor == nil && doctor != nil {
+		log.Printf("[AUTH] Doctor found: %s (ID: %d)", doctor.Email, doctor.ID)
+		log.Printf("[AUTH] Password length in request: %d", len(req.Password))
+		log.Printf("[AUTH] Password hash length in DB: %d", len(doctor.PasswordHash))
+
+		// Doctor found, verify password
+		err := bcrypt.CompareHashAndPassword([]byte(doctor.PasswordHash), []byte(req.Password))
+		if err == nil {
+			log.Printf("[AUTH] Doctor password verification SUCCESS")
+			// Doctor login successful
+			token, err := middleware.GenerateDoctorToken(h.cfg, doctor)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"message": "Server error"})
+				return
+			}
+
+			doctor.PasswordHash = ""
+
+			c.JSON(http.StatusOK, models.DoctorLoginResponse{
+				Message:  "Logged in successfully",
+				Success:  true,
+				Doctor:   doctor,
+				Token:    token,
+				Role:     "doctor",
+				DoctorID: doctor.ID,
+			})
+			return
+		} else {
+			log.Printf("[AUTH] Doctor password verification FAILED: %v", err)
+		}
+	} else {
+		log.Printf("[AUTH] Doctor not found: %v", errDoctor)
+	}
+
+	// Try patient login
 	user, err := h.userRepo.FindByEmail(req.Email)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid email or password"})

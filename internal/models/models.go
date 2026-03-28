@@ -118,17 +118,25 @@ type Doctor struct {
 
 // Appointment Model
 type Appointment struct {
-	ID              int       `json:"id"`
-	PatientID       int       `json:"patientId"`
-	DoctorID        int       `json:"doctorId"`
-	AppointmentDate string    `json:"appointmentDate"` // YYYY-MM-DD format
-	TimeSlot        string    `json:"timeSlot"`
-	Reason          string    `json:"reason"`
-	Status          string    `json:"status"` // scheduled, completed, cancelled, no-show
-	Notes           string    `json:"notes"`
-	CreatedAt       time.Time `json:"createdAt"`
-	UpdatedAt       time.Time `json:"updatedAt"`
-	Doctor          *Doctor   `json:"doctor,omitempty"`
+	ID                int        `json:"id"`
+	PatientID         int        `json:"patientId"`
+	DoctorID          int        `json:"doctorId"`
+	AppointmentDate   string     `json:"appointmentDate"` // YYYY-MM-DD format
+	TimeSlot          string     `json:"timeSlot"`
+	Reason            string     `json:"reason"`
+	Status            string     `json:"status"` // scheduled, completed, cancelled, no-show
+	ApprovalStatus    string     `json:"approvalStatus"` // pending, approved, rejected
+	Notes             string     `json:"notes"`
+	ApprovedBy        *int       `json:"approvedBy,omitempty"`
+	ApprovedAt        *time.Time `json:"approvedAt,omitempty"`
+	RejectionReason   string     `json:"rejectionReason,omitempty"`
+	PatientFirstName  string     `json:"patientFirstName,omitempty"`
+	PatientLastName   string     `json:"patientLastName,omitempty"`
+	PatientEmail      string     `json:"patientEmail,omitempty"`
+	PatientPhone      string     `json:"patientPhone,omitempty"`
+	CreatedAt         time.Time  `json:"createdAt"`
+	UpdatedAt         time.Time  `json:"updatedAt"`
+	Doctor            *Doctor    `json:"doctor,omitempty"`
 }
 
 // AppointmentSlot Model
@@ -241,4 +249,218 @@ type AdminClaims struct {
 	Email string `json:"email"`
 	Role  string `json:"role"`
 	jwt.RegisteredClaims
+}
+
+// Receptionist Models
+type ReceptionistUser struct {
+	ID           int       `json:"id"`
+	Email        string    `json:"email"`
+	Name         string    `json:"name"`
+	Phone        string    `json:"phone"`
+	Department   string    `json:"department"`
+	Role         string    `json:"role"`
+	PasswordHash string    `json:"-"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+	IsActive     bool      `json:"isActive"`
+}
+
+type ReceptionistLoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+type ReceptionistLoginResponse struct {
+	Message    string              `json:"message"`
+	Success    bool                `json:"success"`
+	Receptionist *ReceptionistUser  `json:"receptionist"`
+	Token      string              `json:"token"`
+}
+
+type ReceptionistClaims struct {
+	ID    int    `json:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+// Patient Record Model
+type PatientRecord struct {
+	ID                     int        `json:"id"`
+	UserID                 int        `json:"userId"`
+	FirstName              string     `json:"firstName"`
+	LastName               string     `json:"lastName"`
+	Email                  string     `json:"email"`
+	Phone                  string     `json:"phone"`
+	DateOfBirth            *time.Time `json:"dateOfBirth"`
+	Gender                 string     `json:"gender"`
+	BloodType              string     `json:"bloodType"`
+	Address                string     `json:"address"`
+	City                   string     `json:"city"`
+	State                  string     `json:"state"`
+	PostalCode             string     `json:"postalCode"`
+	Country                string     `json:"country"`
+	Allergies              string     `json:"allergies"`
+	MedicalConditions      string     `json:"medicalConditions"`
+	CurrentMedications     string     `json:"currentMedications"`
+	EmergencyContactName   string     `json:"emergencyContactName"`
+	EmergencyContactPhone  string     `json:"emergencyContactPhone"`
+	CreatedAt              time.Time  `json:"createdAt"`
+	UpdatedAt              time.Time  `json:"updatedAt"`
+}
+
+// Register Patient Request (used by receptionist)
+type RegisterPatientRequest struct {
+	FirstName              string `json:"firstName" binding:"required"`
+	LastName               string `json:"lastName" binding:"required"`
+	Email                  string `json:"email" binding:"required,email"`
+	Password               string `json:"password" binding:"required,min=8"`
+	Phone                  string `json:"phone" binding:"required"`
+	DateOfBirth            string `json:"dateOfBirth"` // YYYY-MM-DD
+	Gender                 string `json:"gender"`
+	BloodType              string `json:"bloodType"`
+	Address                string `json:"address"`
+	City                   string `json:"city"`
+	State                  string `json:"state"`
+	PostalCode             string `json:"postalCode"`
+	Country                string `json:"country"`
+	Allergies              string `json:"allergies"`
+	MedicalConditions      string `json:"medicalConditions"`
+	CurrentMedications     string `json:"currentMedications"`
+	EmergencyContactName   string `json:"emergencyContactName"`
+	EmergencyContactPhone  string `json:"emergencyContactPhone"`
+}
+
+// Appointment Approval Request
+type ApproveAppointmentRequest struct {
+	Status string `json:"status" binding:"required"` // approved or rejected
+	Reason string `json:"reason"`                     // For rejection
+}
+
+// Patient Registration Response
+type PatientRegistrationResponse struct {
+	Message string         `json:"message"`
+	Success bool           `json:"success"`
+	Patient *PatientRecord `json:"patient"`
+	User    *User          `json:"user"`
+}
+
+// Pending Appointments Response
+type PendingAppointmentsResponse struct {
+	Message      string        `json:"message"`
+	Appointments []Appointment `json:"appointments"`
+	Total        int           `json:"total"`
+}
+
+// Receptionist Dashboard Stats
+type ReceptionistDashboardStats struct {
+	TotalPatients        int `json:"totalPatients"`
+	PendingAppointments  int `json:"pendingAppointments"`
+	ApprovedAppointments int `json:"approvedAppointments"`
+	RejectedAppointments int `json:"rejectedAppointments"`
+}
+
+type ReceptionistDashboardResponse struct {
+	Message string                       `json:"message"`
+	Success bool                         `json:"success"`
+	Stats   ReceptionistDashboardStats   `json:"stats"`
+}
+
+// Doctor Models
+type DoctorUser struct {
+	ID              int       `json:"id"`
+	Email           string    `json:"email"`
+	Name            string    `json:"name"`
+	PasswordHash    string    `json:"-"`
+	Specialization  string    `json:"specialization"`
+	Phone           string    `json:"phone"`
+	Role            string    `json:"role"`
+	IsActive        bool      `json:"isActive"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+}
+
+type DoctorLoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+type DoctorLoginResponse struct {
+	Message  string     `json:"message"`
+	Success  bool       `json:"success"`
+	Doctor   *DoctorUser `json:"doctor"`
+	Token    string     `json:"token"`
+	Role     string     `json:"role"`
+	DoctorID int        `json:"doctorId"`
+}
+
+type DoctorClaims struct {
+	ID    int    `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Role  string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+// Patient info for doctor
+type PatientInfo struct {
+	ID              int    `json:"id"`
+	Name            string `json:"name"`
+	Phone           string `json:"phone"`
+	Email           string `json:"email"`
+	MedicalHistory  string `json:"medicalHistory"`
+	Address         string `json:"address"`
+	BloodType       string `json:"bloodType"`
+}
+
+// Appointment info for doctor
+type AppointmentInfoForDoctor struct {
+	ID              int    `json:"id"`
+	PatientName     string `json:"patientName"`
+	PatientID       int    `json:"patientId"`
+	AppointmentDate string `json:"appointmentDate"`
+	TimeSlot        string `json:"timeSlot"`
+	Reason          string `json:"reason"`
+	Status          string `json:"status"`
+	Notes           string `json:"notes"`
+	PatientPhone    string `json:"patientPhone"`
+	PatientEmail    string `json:"patientEmail"`
+}
+
+type DoctorPatientsResponse struct {
+	Message  string        `json:"message"`
+	Success  bool          `json:"success"`
+	Patients []PatientInfo `json:"patients"`
+	Total    int           `json:"total"`
+}
+
+type DoctorAppointmentsResponse struct {
+	Message      string                     `json:"message"`
+	Success      bool                       `json:"success"`
+	Appointments []AppointmentInfoForDoctor `json:"appointments"`
+	Total        int                        `json:"total"`
+}
+
+type UpdateAppointmentStatusRequest struct {
+	Status string `json:"status" binding:"required"`
+	Notes  string `json:"notes"`
+}
+
+type UpdateAppointmentStatusResponse struct {
+	Message string                    `json:"message"`
+	Success bool                      `json:"success"`
+	Appointment *AppointmentInfoForDoctor `json:"appointment"`
+}
+
+type DoctorDashboardStats struct {
+	TotalPatients   int `json:"totalPatients"`
+	TotalAppointments int `json:"totalAppointments"`
+	CompletedAppointments int `json:"completedAppointments"`
+	UpcomingAppointments int `json:"upcomingAppointments"`
+}
+
+type DoctorDashboardResponse struct {
+	Message string                `json:"message"`
+	Success bool                  `json:"success"`
+	Stats   DoctorDashboardStats  `json:"stats"`
 }

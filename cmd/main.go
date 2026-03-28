@@ -32,11 +32,16 @@ func main() {
 	// Initialize repositories
 	userRepo := repositories.NewUserRepository(config.DB)
 	adminRepo := repositories.NewAdminRepository(config.DB)
+	receptionistRepo := repositories.NewReceptionistRepository(config.DB)
+	appointmentRepo := repositories.NewAppointmentRepository(config.DB)
+	doctorRepo := repositories.NewDoctorRepository(config.DB)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo, cfg)
 	adminHandler := handlers.NewAdminHandler(adminRepo, cfg)
+	receptionistHandler := handlers.NewReceptionistHandler(receptionistRepo, userRepo, appointmentRepo, cfg)
 	appointmentHandler := handlers.NewAppointmentHandler(cfg)
+	doctorHandler := handlers.NewDoctorHandler(doctorRepo, cfg)
 
 	// Set Gin mode based on environment
 	if cfg.Env == "production" {
@@ -127,6 +132,54 @@ func main() {
 		{
 			adminProtected.GET("/dashboard/stats", adminHandler.GetDashboardStats)
 			adminProtected.POST("/logout", adminHandler.AdminLogout)
+		}
+	}
+
+	// Receptionist routes
+	receptionistGroup := router.Group("/api/receptionist")
+	{
+		// Public receptionist routes
+		receptionistGroup.POST("/login", receptionistHandler.ReceptionistLogin)
+
+		// Protected receptionist routes (require receptionist token)
+		receptionistProtected := receptionistGroup.Group("")
+		receptionistProtected.Use(middleware.ReceptionistAuthMiddleware(cfg))
+		{
+			// Dashboard
+			receptionistProtected.GET("/dashboard/stats", receptionistHandler.GetDashboardStats)
+			receptionistProtected.POST("/logout", receptionistHandler.ReceptionistLogout)
+
+			// Patient management
+			receptionistProtected.POST("/patients/register", receptionistHandler.RegisterPatient)
+			receptionistProtected.GET("/patients", receptionistHandler.GetPatientRecords)
+
+			// Appointment management
+			receptionistProtected.POST("/appointments/book", receptionistHandler.BookAppointmentByReceptionist)
+			receptionistProtected.GET("/appointments/pending", receptionistHandler.GetPendingAppointments)
+			receptionistProtected.POST("/appointments/:id/approve", receptionistHandler.ApproveAppointment)
+			receptionistProtected.POST("/appointments/:id/reject", receptionistHandler.RejectAppointment)
+		}
+	}
+
+	// Doctor routes
+	doctorAuthGroup := router.Group("/api/doctor")
+	{
+		// Protected doctor routes (require doctor token)
+		doctorProtected := doctorAuthGroup.Group("")
+		doctorProtected.Use(middleware.DoctorAuthMiddleware(cfg))
+		{
+			// Dashboard
+			doctorProtected.GET("/dashboard/stats", doctorHandler.GetDashboardStats)
+
+			// Patient management
+			doctorProtected.GET("/patients", doctorHandler.GetAssignedPatients)
+
+			// Appointment management
+			doctorProtected.GET("/appointments", doctorHandler.GetAppointments)
+			doctorProtected.PUT("/appointments/:appointmentId/status", doctorHandler.UpdateAppointmentStatus)
+
+			// Profile
+			doctorProtected.GET("/profile", doctorHandler.GetProfile)
 		}
 	}
 

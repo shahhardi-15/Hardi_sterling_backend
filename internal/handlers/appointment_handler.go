@@ -6,6 +6,7 @@ import (
 	"sterling-hms-backend/internal/models"
 	"sterling-hms-backend/internal/repositories"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -196,15 +197,20 @@ func (h *AppointmentHandler) BookAppointment(c *gin.Context) {
 		return
 	}
 
-	// Validate appointment date is in the future
+	// Validate appointment date format
 	appointmentDate, err := time.Parse("2006-01-02", req.AppointmentDate)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid date format. Use YYYY-MM-DD"})
 		return
 	}
 
-	if appointmentDate.Before(time.Now()) {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Appointment date must be in the future"})
+	// Check if appointment date is at least today (not in the past)
+	// Compare only the date part, not the exact time
+	today := time.Now().Truncate(24 * time.Hour)
+	appointmentDateTruncated := appointmentDate.Truncate(24 * time.Hour)
+
+	if appointmentDateTruncated.Before(today) {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Appointment date must be today or in the future"})
 		return
 	}
 
@@ -243,6 +249,11 @@ func (h *AppointmentHandler) BookAppointment(c *gin.Context) {
 	)
 
 	if err != nil {
+		// Check if this is a duplicate key error (slot already booked)
+		if strings.Contains(err.Error(), "duplicate key") || strings.Contains(err.Error(), "UNIQUE constraint") {
+			c.JSON(http.StatusConflict, gin.H{"message": "This time slot is no longer available. Please select another slot."})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create appointment"})
 		return
 	}

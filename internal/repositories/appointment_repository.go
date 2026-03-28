@@ -33,6 +33,10 @@ func (r *AppointmentRepository) GetPatientProfile(userID int) (*models.PatientPr
 		return nil, err
 	}
 
+	// Phone, Address, and MedicalHistory are not stored in users table
+	// They would need to be stored in a separate patient_records table
+	// For now, these fields remain empty strings
+
 	return &profile, nil
 }
 
@@ -248,6 +252,17 @@ func (r *AppointmentRepository) CheckSlotAvailability(doctorID int, appointmentD
 
 	if err != nil {
 		if err == sql.ErrNoRows {
+			// Slot doesn't exist - check if any slots exist for this doctor and date
+			var count int
+			checkQuery := `SELECT COUNT(*) FROM appointment_slots WHERE doctor_id = $1 AND slot_date = $2`
+			r.db.QueryRow(checkQuery, doctorID, appointmentDate).Scan(&count)
+
+			if count == 0 {
+				// No slots at all for this date - this might be normal for past dates
+				// But it could also mean no slots were created for this date
+				return false, nil
+			}
+			// Slots exist for this date, but not this specific time
 			return false, nil
 		}
 		return false, err
