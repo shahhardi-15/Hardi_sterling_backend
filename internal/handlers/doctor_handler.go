@@ -3,10 +3,10 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"strconv"
 	"sterling-hms-backend/internal/config"
 	"sterling-hms-backend/internal/models"
 	"sterling-hms-backend/internal/repositories"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -63,10 +63,10 @@ func (h *DoctorHandler) GetAppointments(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, models.DoctorAppointmentsResponse{
-		Message:       "Appointments retrieved successfully",
-		Success:       true,
+		Message:      "Appointments retrieved successfully",
+		Success:      true,
 		Appointments: appointments,
-		Total:         len(appointments),
+		Total:        len(appointments),
 	})
 }
 
@@ -106,10 +106,10 @@ func (h *DoctorHandler) UpdateAppointmentStatus(c *gin.Context) {
 
 	// Validate status
 	validStatuses := map[string]bool{
-		"upcoming":   true,
+		"upcoming":  true,
 		"completed": true,
-		"cancelled":  true,
-		"no-show":    true,
+		"cancelled": true,
+		"no-show":   true,
 	}
 
 	if !validStatuses[req.Status] {

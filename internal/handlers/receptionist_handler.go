@@ -3,10 +3,10 @@ package handlers
 import (
 	"log"
 	"net/http"
-	"strconv"
 	"sterling-hms-backend/internal/config"
 	"sterling-hms-backend/internal/models"
 	"sterling-hms-backend/internal/repositories"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -90,22 +90,22 @@ func (h *ReceptionistHandler) ReceptionistLogin(c *gin.Context) {
 
 	// Prepare response
 	receptionistResponse := &models.ReceptionistUser{
-		ID:        receptionist.ID,
-		Email:     receptionist.Email,
-		Name:      receptionist.Name,
-		Phone:     receptionist.Phone,
+		ID:         receptionist.ID,
+		Email:      receptionist.Email,
+		Name:       receptionist.Name,
+		Phone:      receptionist.Phone,
 		Department: receptionist.Department,
-		Role:      receptionist.Role,
-		CreatedAt: receptionist.CreatedAt,
-		UpdatedAt: receptionist.UpdatedAt,
-		IsActive:  receptionist.IsActive,
+		Role:       receptionist.Role,
+		CreatedAt:  receptionist.CreatedAt,
+		UpdatedAt:  receptionist.UpdatedAt,
+		IsActive:   receptionist.IsActive,
 	}
 
 	c.JSON(http.StatusOK, models.ReceptionistLoginResponse{
-		Message:     "Login successful",
-		Success:     true,
+		Message:      "Login successful",
+		Success:      true,
 		Receptionist: receptionistResponse,
-		Token:       token,
+		Token:        token,
 	})
 }
 
@@ -244,9 +244,9 @@ func (h *ReceptionistHandler) BookAppointmentByReceptionist(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message":      "Appointment booked successfully (pending approval)",
-		"success":      true,
-		"appointment":  appointment,
+		"message":     "Appointment booked successfully (pending approval)",
+		"success":     true,
+		"appointment": appointment,
 	})
 }
 

@@ -7,7 +7,7 @@ import (
 )
 
 func testHashPassword() {
-	password := "admin@123"
+	password := "TestPass@123"
 
 	// Generate hash for the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
@@ -27,4 +27,8 @@ func testHashPassword() {
 	}
 
 	fmt.Println("Hash verification successful!")
+}
+
+func main() {
+	testHashPassword()
 }
