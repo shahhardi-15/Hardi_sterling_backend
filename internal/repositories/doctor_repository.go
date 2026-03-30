@@ -220,3 +220,18 @@ func (r *DoctorRepository) GetDashboardStats(doctorID int) (*models.DoctorDashbo
 
 	return stats, nil
 }
+
+// RegistrationNumberExists checks if a registration number already exists
+func (r *DoctorRepository) RegistrationNumberExists(regNumber string) (bool, error) {
+	var count int
+	err := r.db.QueryRow(
+		`SELECT COUNT(*) FROM doctors WHERE registration_number = $1`,
+		regNumber,
+	).Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}

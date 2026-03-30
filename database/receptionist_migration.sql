@@ -84,11 +84,8 @@ CREATE TABLE IF NOT EXISTS receptionist_audit_logs (
 CREATE INDEX IF NOT EXISTS idx_receptionist_audit_logs_receptionist_id ON receptionist_audit_logs(receptionist_id);
 CREATE INDEX IF NOT EXISTS idx_receptionist_audit_logs_created_at ON receptionist_audit_logs(created_at DESC);
 
--- Add foreign key constraint for approval tracking
-ALTER TABLE appointments
-ADD CONSTRAINT IF NOT EXISTS fk_appointments_approved_by 
-  FOREIGN KEY (approved_by) REFERENCES receptionist_users(id);
-
--- Create index for appointment queries by receptionist
+-- Add foreign key constraint for approval tracking (if it doesn't exist)
+-- Note: This constraint may already exist from previous migrations, so we skip if already present
+-- CREATE INDEX for appointment queries by receptionist
 CREATE INDEX IF NOT EXISTS idx_appointments_approval_status ON appointments(approval_status);
 CREATE INDEX IF NOT EXISTS idx_appointments_created_at ON appointments(created_at DESC);

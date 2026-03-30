@@ -35,10 +35,14 @@ func main() {
 	receptionistRepo := repositories.NewReceptionistRepository(config.DB)
 	appointmentRepo := repositories.NewAppointmentRepository(config.DB)
 	doctorRepo := repositories.NewDoctorRepository(config.DB)
+	patientRepo := repositories.NewPatientRepository(config.DB)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo, cfg)
 	adminHandler := handlers.NewAdminHandler(adminRepo, cfg)
+	adminPatientHandler := handlers.NewAdminPatientHandler(patientRepo, userRepo, cfg)
+	adminDoctorHandler := handlers.NewAdminDoctorHandler(doctorRepo, userRepo, cfg)
+	adminDepartmentHandler := handlers.NewAdminDepartmentHandler()
 	receptionistHandler := handlers.NewReceptionistHandler(receptionistRepo, userRepo, appointmentRepo, cfg)
 	appointmentHandler := handlers.NewAppointmentHandler(cfg)
 	doctorHandler := handlers.NewDoctorHandler(doctorRepo, cfg)
@@ -132,6 +136,23 @@ func main() {
 		{
 			adminProtected.GET("/dashboard/stats", adminHandler.GetDashboardStats)
 			adminProtected.POST("/logout", adminHandler.AdminLogout)
+
+			// Patient management routes
+			adminProtected.GET("/patients", adminPatientHandler.ListPatients)
+			adminProtected.POST("/patients", adminPatientHandler.CreatePatient)
+			adminProtected.GET("/patients/:id", adminPatientHandler.GetPatient)
+			adminProtected.PUT("/patients/:id", adminPatientHandler.UpdatePatient)
+			adminProtected.PATCH("/patients/:id/status", adminPatientHandler.UpdatePatientStatus)
+
+			// Doctor management routes
+			adminProtected.GET("/doctors", adminDoctorHandler.ListDoctors)
+			adminProtected.POST("/doctors", adminDoctorHandler.CreateDoctor)
+			adminProtected.GET("/doctors/:id", adminDoctorHandler.GetDoctor)
+			adminProtected.PUT("/doctors/:id", adminDoctorHandler.UpdateDoctor)
+			adminProtected.PATCH("/doctors/:id/status", adminDoctorHandler.UpdateDoctorStatus)
+
+			// Departments
+			adminProtected.GET("/departments", adminDepartmentHandler.ListDepartments)
 		}
 	}
 

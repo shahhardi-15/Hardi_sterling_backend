@@ -28,7 +28,3 @@ func testHashPassword() {
 
 	fmt.Println("Hash verification successful!")
 }
-
-func main() {
-	testHashPassword()
-}
