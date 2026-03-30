@@ -176,7 +176,13 @@ func (r *AppointmentRepository) CreateAppointment(patientID int, doctorID int, a
 	// Mark slot as unavailable
 	_ = r.MarkSlotUnavailable(doctorID, appointmentDate, timeSlot)
 
-	return &apt, nil
+	// Fetch full appointment with doctor information for response
+	fullApt, err := r.GetAppointmentByID(apt.ID)
+	if err != nil {
+		// If we can't fetch full data, return what we have
+		return &apt, nil
+	}
+	return fullApt, nil
 }
 
 // CancelAppointment cancels an appointment (only if status is scheduled)
