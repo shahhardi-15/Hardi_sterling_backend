@@ -187,6 +187,21 @@ func (h *DoctorHandler) GetProfile(c *gin.Context) {
 	})
 }
 
+// DoctorLogout handles doctor logout
+func (h *DoctorHandler) DoctorLogout(c *gin.Context) {
+	// Since we're using stateless JWT, logout is just a client-side action
+	// but we can log this for audit purposes
+	doctorID, exists := c.Get("doctorID")
+	if exists {
+		log.Printf("[DOCTOR] Doctor logout - Doctor ID: %v", doctorID)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Logout successful",
+	})
+}
+
 // VerifyDoctorCredentials verifies doctor email and password (used in auth handler)
 func (h *DoctorHandler) VerifyDoctorCredentials(email string, password string) (*models.DoctorUser, error) {
 	doctor, err := h.doctorRepo.FindByEmail(email)

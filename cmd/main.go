@@ -178,6 +178,9 @@ func main() {
 			doctorProtected.GET("/appointments", doctorHandler.GetAppointments)
 			doctorProtected.PUT("/appointments/:appointmentId/status", doctorHandler.UpdateAppointmentStatus)
 
+			// Logout
+			doctorProtected.POST("/logout", doctorHandler.DoctorLogout)
+
 			// Profile
 			doctorProtected.GET("/profile", doctorHandler.GetProfile)
 		}
