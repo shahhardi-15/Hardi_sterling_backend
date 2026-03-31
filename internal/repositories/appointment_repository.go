@@ -158,8 +158,8 @@ func (r *AppointmentRepository) GetDoctors() ([]models.Doctor, error) {
 // CreateAppointment creates a new appointment
 func (r *AppointmentRepository) CreateAppointment(patientID int, doctorID int, appointmentDate string, timeSlot string, reason string, notes string) (*models.Appointment, error) {
 	query := `
-		INSERT INTO appointments (patient_id, doctor_id, appointment_date, time_slot, reason, notes, status, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+		INSERT INTO appointments (patient_id, doctor_id, appointment_date, time_slot, reason, notes, status, booked_by_role, booked_by, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, 'pending', 'patient', $1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 		RETURNING id, patient_id, doctor_id, appointment_date, time_slot, reason, status, notes, created_at, updated_at
 	`
 
@@ -172,6 +172,10 @@ func (r *AppointmentRepository) CreateAppointment(patientID int, doctorID int, a
 	if err != nil {
 		return nil, err
 	}
+
+	// Set the new fields for the response
+	apt.BookedByRole = "patient"
+	apt.BookedBy = &patientID
 
 	// Mark slot as unavailable
 	_ = r.MarkSlotUnavailable(doctorID, appointmentDate, timeSlot)

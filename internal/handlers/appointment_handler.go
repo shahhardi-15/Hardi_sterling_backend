@@ -259,7 +259,7 @@ func (h *AppointmentHandler) BookAppointment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, models.AppointmentResponse{
-		Message:     "Appointment booked successfully",
+		Message:     "Appointment request submitted. Waiting for admin approval.",
 		Appointment: appointment,
 	})
 }

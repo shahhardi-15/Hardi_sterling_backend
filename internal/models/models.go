@@ -118,25 +118,28 @@ type Doctor struct {
 
 // Appointment Model
 type Appointment struct {
-	ID               int        `json:"id"`
-	PatientID        int        `json:"patientId"`
-	DoctorID         int        `json:"doctorId"`
-	AppointmentDate  string     `json:"appointmentDate"` // YYYY-MM-DD format
-	TimeSlot         string     `json:"timeSlot"`
-	Reason           string     `json:"reason"`
-	Status           string     `json:"status"`         // scheduled, completed, cancelled, no-show
-	ApprovalStatus   string     `json:"approvalStatus"` // pending, approved, rejected
-	Notes            string     `json:"notes"`
-	ApprovedBy       *int       `json:"approvedBy,omitempty"`
-	ApprovedAt       *time.Time `json:"approvedAt,omitempty"`
-	RejectionReason  string     `json:"rejectionReason,omitempty"`
-	PatientFirstName string     `json:"patientFirstName,omitempty"`
-	PatientLastName  string     `json:"patientLastName,omitempty"`
-	PatientEmail     string     `json:"patientEmail,omitempty"`
-	PatientPhone     string     `json:"patientPhone,omitempty"`
-	CreatedAt        time.Time  `json:"createdAt"`
-	UpdatedAt        time.Time  `json:"updatedAt"`
-	Doctor           *Doctor    `json:"doctor,omitempty"`
+	ID                int        `json:"id"`
+	PatientID         int        `json:"patientId"`
+	DoctorID          int        `json:"doctorId"`
+	AppointmentDate   string     `json:"appointmentDate"` // YYYY-MM-DD format
+	TimeSlot          string     `json:"timeSlot"`
+	Reason            string     `json:"reason"`
+	Status            string     `json:"status"`         // scheduled, completed, cancelled, no-show, pending
+	ApprovalStatus    string     `json:"approvalStatus"` // pending, approved, rejected
+	Notes             string     `json:"notes"`
+	ApprovedBy        *int       `json:"approvedBy,omitempty"`
+	ApprovedAt        *time.Time `json:"approvedAt,omitempty"`
+	RejectionReason   string     `json:"rejectionReason,omitempty"`
+	BookedByRole      string     `json:"bookedByRole,omitempty"`      // admin, patient, receptionist
+	DisapprovalReason string     `json:"disapprovalReason,omitempty"` // reason for disapproval
+	BookedBy          *int       `json:"bookedBy,omitempty"`          // user ID who booked the appointment
+	PatientFirstName  string     `json:"patientFirstName,omitempty"`
+	PatientLastName   string     `json:"patientLastName,omitempty"`
+	PatientEmail      string     `json:"patientEmail,omitempty"`
+	PatientPhone      string     `json:"patientPhone,omitempty"`
+	CreatedAt         time.Time  `json:"createdAt"`
+	UpdatedAt         time.Time  `json:"updatedAt"`
+	Doctor            *Doctor    `json:"doctor,omitempty"`
 }
 
 // AppointmentSlot Model
